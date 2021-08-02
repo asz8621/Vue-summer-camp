@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
+<body>
+  <style>
+    body{
+      background: rgb(226, 226, 226);
+    }
+    .calculator{
+      width: 350px;
+      background: rgb(34, 128, 235);
+      border-radius: 10px;
+    }
+    .mathBtn{
+      padding: 1rem;
+      border-radius: 15px;
+      border: 1px solid #062145;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.25rem;
+      transition: 0.25s;
+    }
+    .mathBtn:hover{
+      background: #003b6a;
+      color: #fff;
+    }
+    .monitor{
+      background: #003b6a;
+      color: #fff;
+      border-radius: 10px 10px 0 0;
+    }
+    .numberEnd{
+      font-size: 2rem;
+    }
+    .record{
+      width: 350px;
+      height: 527px;
+      background: #fff;
+      overflow: hidden;
+    }
+    .recordItem{
+      font-weight: 900;
+    }
+    .recordItem::marker{
+      color: red;
+      font-weight: 900;
+    }
+  </style>
+  <div id="app">
+    <div class="d-flex justify-content-center align-items-center vh-100">
+      <div class="calculator border me-3">
+        <div class="monitor p-3 text-end border-bottom">
+          <template v-if="state !== 3">
+            <div class="process fs-5">{{ regular }}</div>
+            <div class="number fs-1">{{ number }}</div>
+          </template>
+          <template v-else>
+            <div class="numberEnd">{{ answer }}</div>
+          </template>
+        </div>
+        <div class="container p-3">
+          <div class="row">
+            <div class="col-9">
+              <div class="row align-items-center h-100">
+                <div class="col-4" v-for="(item, index) in leftMathBtn" :key="index">
+                  <span role="button" class="mathBtn my-2" @click="calNumber(item, 0)">{{ item }}</span>
+                </div>
+                <div class="col-12">
+                  <span class="text-center mathBtn my-2" @click="reset">AC</span>
+                </div>
+              </div>
+            </div>
+            <div class="col-3 flex-column">
+              <div class="row h-100">
+                <div class="col-12" v-for="(item, index) in rightMathBtn" :key="index">
+                  <span role="button" class="mathBtn my-2" @click="symbolFn(item)">{{ item }}</span>
+                </div> 
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="record">
+        <div class="position-relative my-4">
+          <div class="progress bg-primary" style="height: 3px;">
+            <div class="progress-bar" role="progressbar" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
+          </div>
+          <span class="position-absolute top-0 start-50 translate-middle bg-light px-3 fs-4 fw-bold">歷史紀錄</span>
+        </div>
+        <ol>
+          <li class="recordItem text-primary my-4" v-for="(item,index) in record" :key="index">{{ item }}</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+<script src="https://unpkg.com/vue@next"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.min.js" integrity="sha512-bZS47S7sPOxkjU/4Bt0zrhEtWx0y0CRkhEp8IckzK+ltifIIE9EMIMTuT/mEzoIMewUINruDBIR/jJnbguonqQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script>
+    Vue.createApp({
+      data() {
+        return {
+          leftMathBtn:[
+            '7','8','9',
+            '4','5','6',
+            '1','2','3',
+            '.','0','=',
+          ],
+          rightMathBtn:['DEL','÷','×','-','+'],
+          state: 0, // 0 初始值, 1 輸入數字, 2 鎖定數字(進入加減乘除), 3 結束算式
+          number: '0', // 預設 0, 顯示用
+          regular: '', // 顯示計算機輸入的過程,1÷1×1+1-1
+          answer: '', // 答案
+          Informal: '', // 完整算式最後用 eval() 可算出 1/1*1+1-1
+          isPoint: false, // 判斷小數點
+          record:[], // 紀錄
+        }
+      },
+      computed:{
+      },
+      mounted() {
+      },
+      methods: {
+        calNumber(num,st){
+          if(this.state === 3){
+            this.state = 0
+          }
+          // 一開始不能點 = & 0
+          if(num === '=' && this.number === '0') return
+          // 計算答案
+          if(num === '=' && this.number !== '0') {
+            this.regular += this.number
+            this.Informal += this.number
+            this.answer = eval(this.Informal)
+            this.regular += `=${this.answer}`
+            if(this.record.length >= 10){
+              this.record.shift()
+            }
+            this.record.push(this.regular)
+            this.state = 3
+            this.clear()
+          }
+
+          // 判斷是否是第一次輸入數字
+          if(this.state < 3 && this.number === '0' && num !== '='){
+            // 剛開始不能輸入 0
+            if(num === 0) return
+            // 輸入 . 
+            if(num === '.'){
+              this.number += num // 0.
+              this.state = 1
+              this.isPoint = true
+              return
+            }
+            // 輸入 123456789
+            this.number = num
+            this.state = 1
+            return
+          }
+
+          // 輸入過數字就累加
+          if(this.state === 1 && this.number !== '0'){
+            // 判斷是否有點擊小數點
+            if(num === '.' && !this.isPoint){
+              this.number += num
+              this.isPoint = true
+              return
+            }
+            // 數字內有 . 在點擊 . 直接跳出
+            if(num === '.') return
+            this.number += num
+          }
+        },
+        symbolFn(num){
+          switch(num) {
+            case 'DEL':
+              if(this.state === 2) return
+              // 0.1 => length = 3
+              // 0.1 => pointLocation = 1
+              // 找小數點的位置
+              let pointLocation = this.number.indexOf('.')
+              // 判斷數字長度
+              if(this.number.length > 1){
+                if(this.number.length === pointLocation + 1){
+                  this.isPoint = false
+                }
+                this.number = this.number.substring(0, this.number.length-1)
+              }else{
+                this.number = '0'
+                this.state = 0
+              }
+              break;
+            case '÷':
+              // 如果沒數字就不動作
+              if(this.state < 1) return
+              // 目前狀態是答案就直接累加
+              if(this.state === 3){
+                this.state = 2
+                this.regular = this.answer + num
+                this.Informal = `${this.answer}/`
+              }
+              // 輸入數字
+              if(this.state === 1){
+                this.state = 2
+                this.regular += this.number + num
+                this.Informal += `${this.number}/`
+              }
+              // 鎖定數字修改加減乘除
+              if(this.state === 2){
+                this.regular = this.regular.substring(0, this.regular.length-1) + num
+                this.Informal = `${this.Informal.substring(0, this.Informal.length-1)}/`
+              }
+              this.number = '0'
+              break;
+            case '×':
+              // 如果沒數字就不動作
+              if(this.state < 1) return
+              // 目前狀態是答案就直接累加
+              if(this.state === 3){
+                this.state = 2
+                this.regular = this.answer + num
+                this.Informal = `${this.answer}*`
+              }
+              // 輸入數字
+              if(this.state === 1){
+                this.state = 2
+                this.regular += this.number + num
+                this.Informal += `${this.number}*`
+              }
+              // 鎖定數字修改加減乘除
+              if(this.state === 2){
+                this.regular = this.regular.substring(0, this.regular.length-1) + num
+                this.Informal = `${this.Informal.substring(0, this.Informal.length-1)}*`
+              }
+              this.number = '0'
+              break;
+            case '-':
+              // 如果沒數字就不動作
+              if(this.state < 1) return
+              // 目前狀態是答案就直接累加
+              if(this.state === 3){
+                this.state = 2
+                this.regular = this.answer + num
+                this.Informal = this.answer + num
+              }
+              // 輸入數字
+              if(this.state === 1){
+                this.state = 2
+                this.regular += this.number + num
+                this.Informal += this.number + num
+              }
+              // 鎖定數字修改加減乘除
+              if(this.state === 2){
+                this.regular = this.regular.substring(0, this.regular.length-1) + num
+                this.Informal = this.Informal.substring(0, this.Informal.length-1) + num
+              }
+              this.number = '0'
+              break;
+            case '+':
+              // 如果沒數字就不動作
+              if(this.state < 1) return
+              // 目前狀態是答案就直接累加
+              if(this.state === 3){
+                this.state = 2
+                this.regular = this.answer + num
+                this.Informal = this.answer + num
+              }
+              // 輸入數字
+              if(this.state === 1){
+                this.state = 2
+                this.regular += this.number + num
+                this.Informal += this.number + num
+              }
+              // 鎖定數字修改加減乘除
+              if(this.state === 2){
+                this.regular = this.regular.substring(0, this.regular.length-1) + num
+                this.Informal = this.Informal.substring(0, this.Informal.length-1) + num
+              }
+              this.number = '0'
+              break;
+            default:
+          }
+        },
+        clear(){
+          this.number = "0"
+          this.regular = ''
+          this.Informal = ''
+          this.isPoint = false
+        },
+        reset(){
+          this.number = "0"
+          this.regular = ''
+          this.answer = ''
+          this.Informal = ''
+          this.isPoint = false
+          this.state = 0
+        },
+      },
+    }).mount('#app')
+  </script>
+</body>
+</html>
