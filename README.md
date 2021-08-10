@@ -31,7 +31,7 @@
 ### [week 3](https://asz8621.github.io/Vue-summer-camp/week3/)
 ---
 
-## Week 3 - Composition API
+## Week 4 - Composition API
 
 延續第三週，改為使用 Composition API 製作 Todos 工具，包含 CRUD 的完整行為
 - 可以新增、編輯、刪除、陳列 Todo 的列表功能
