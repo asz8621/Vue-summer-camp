@@ -123,55 +123,20 @@
         const isEdit = ref(false) // 是否編輯
         const state = ref(0) // 0: 全部, 1: 未完成, 2: 完成
 
-        function getTodos() {
-          const localStorageData = JSON.parse(localStorage.getItem("Todos"))
-          if(localStorageData === null) return
-          todosData.value = localStorageData
-        }
-
-        // 列表切換用
-        const filterTodos = computed(() => {
-          switch (state.value) {
-            case 1:
-              return todosData.value.filter((item) => !item.finish);
-            break;
-            case 2:
-              return todosData.value.filter((item) => item.finish);
-            break;
-            default:
-              return todosData.value;
-          }
-        });
-        // 未完成數量
-        const undoneQty = computed(() => {
-          let qty = todosData.value.filter((item) => item.finish === false)
-          // console.log(qty.value);
-          return qty.length
-        });
-        // 完成數量
-        const finishQty = computed(() => {
-          let qty = todosData.value.filter((item) =>  item.finish === true)
-          return qty.length
-        });
-        // 全部
-        const allQty = computed(() => {
-          return todosData.value.length
-        });
-
         // 打開 modal
-        const todoText = ref()
-        function openModal() {
+        const todoText = ref(null)
+        const openModal = () => {
           let modal = new bootstrap.Modal(document.getElementById('todoModal'), {
             keyboard: false
           })
           modal.show();
           setTimeout(() => {
             todoText.value.focus();
-          }, 1000);
+          }, 500);
         }
 
         // 關閉 modal
-        function closeModal() {
+        const closeModal = () => {
           todos.value = {
             id: '',
             content: '',
@@ -186,14 +151,14 @@
         }
 
         // 取得 localStorage 資料
-        function getTodos() {
+        const getTodos = () => {
           const localStorageData = JSON.parse(localStorage.getItem("Todos"))
           if(localStorageData === null) return
           todosData.value = localStorageData
         }
 
         // 送出 Todo
-        function sendAddTodo() {
+        const sendAddTodo = () => {
           // 沒寫 todo & 日期就 return
           if(todos.value.content === '' || todos.value.completionDate === '') return
           // 新增
@@ -211,7 +176,7 @@
         }
 
         // 完成、編輯、刪除、取消完成
-        function operateFn(item, data) {
+        const operateFn = (item, data) => {
           switch(item){
             case 'add':
               openModal();
@@ -238,19 +203,19 @@
         }
 
         // 刪除 Todo
-        function delTodo(data) {
+        const delTodo = (data) => {
           if (window.confirm('你確定要刪除 Todo ?')) {
             const delIndex = todosData.value.findIndex((item) => item.id  === data.id)
             todosData.value[delIndex].del = true
             setTimeout(() => {
               todosData.value.splice(delIndex, 1)
               localStorage.setItem('Todos', JSON.stringify(todosData.value));
-            }, 500);
+            }, 450);
           }
         }
 
         // 清除所有 Todo
-        function clearAll() {
+        const clearAll = () => {
           if (window.confirm('你確定要刪除全部的 Todo?')) {
             todosData.value.forEach(item => {
               item.del = true
@@ -264,6 +229,33 @@
           }
         }
 
+        // 列表切換用
+        const filterTodos = computed(() => {
+          switch (state.value) {
+            case 1:
+              return todosData.value.filter((item) => !item.finish);
+            break;
+            case 2:
+              return todosData.value.filter((item) => item.finish);
+            break;
+            default:
+              return todosData.value;
+          }
+        });
+        // 未完成數量
+        const undoneQty = computed(() => {
+          let qty = todosData.value.filter((item) => item.finish === false)
+          return qty.length
+        });
+        // 完成數量
+        const finishQty = computed(() => {
+          let qty = todosData.value.filter((item) =>  item.finish === true)
+          return qty.length
+        });
+        // 全部
+        const allQty = computed(() => {
+          return todosData.value.length
+        });
 
         onMounted(() => {
           getTodos()
