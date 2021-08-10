@@ -8,6 +8,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
 </head>
+
 <style>
   body{
     background: rgb(73, 73, 73);
@@ -18,6 +19,18 @@
   .todoItem{
     transition: .5s;
   }
+  .todoItem.del{
+    animation-name: delTodo;
+    animation-duration: 0.5s;
+  }
+  @keyframes delTodo{
+    0%{
+      transform: scale(1);
+    }
+    100%{
+      transform: scale(0);
+    }
+  }
   .todoItem.done{
     opacity: 0.5;
   }
@@ -25,6 +38,7 @@
     word-wrap: break-word;
   }
 </style>
+
 <body>
   <div id="app">
     <div class="container">
@@ -36,7 +50,7 @@
           <button type="button" class="btn btn-outline-success text-white" :class="{ 'active': state === 1 }" @click="state = 1">未完成 ({{ undoneQty }})</button>
           <button type="button" class="btn btn-outline-success text-white" :class="{ 'active': state === 2 }" @click="state = 2">已完成 ({{ finishQty }})</button>
         </div>
-        <button type="button" class="btn btn-danger ms-5" @click="clearAll">清除全部</button>
+        <button type="button" class="btn btn-danger ms-5" @click="clearAll" :disabled="todosData.length === 0">清除全部</button>
       </div>
       <div class="text-center mb-3 d-block d-md-none">
         <button type="button" class="btn btn-outline-success text-white" :class="{ 'active': state === 0 }" @click="state = 0">全部 ({{ allQty }})</button>
@@ -45,7 +59,7 @@
       </div>
       <ul class="row list-unstyled">
         <li class="col-sm-6 col-md-3" v-for="item in filterTodos" :key="item.id">
-          <div class="todoItem rounded p-3 mb-3" :class="[item.finish ? 'text-light bg-success' : 'text-dark bg-white', {done: item.finish}]">
+          <div class="todoItem rounded p-3 mb-3" :class="[item.finish ? 'text-light bg-success' : 'text-dark bg-white', {done: item.finish, del : item.del}]">
             <p class="content fs-3">{{ item.content }}</p>
             <div class="time text-secondary text-end pb-3">{{ item.completionDate }}</div>
             <div class="d-flex justify-content-between" v-if="!item.finish">
@@ -74,7 +88,7 @@
             <div class="modal-body">
 
               <div class="form-floating">
-                <textarea class="form-control" placeholder="請輸入代辦事項" id="writeTodo" style="height: 200px" v-model="todos.content"></textarea>
+                <textarea class="form-control" placeholder="請輸入代辦事項" id="writeTodo" style="height: 200px" v-model="todos.content" ref="todoText"></textarea>
                 <label for="writeTodo">請輸入代辦事項</label>
               </div>
               <br>
@@ -85,7 +99,7 @@
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" @click="closeModal">關閉</button>
-              <button type="button" class="btn btn-primary" @click="sendAddTodo">送出</button>
+              <button type="button" class="btn btn-primary" @click="sendAddTodo" :disabled="todos.content === '' || todos.completionDate === ''">送出</button>
             </div>
           </div>
         </div>
@@ -105,7 +119,8 @@
             id: '',
             content: '',
             completionDate: '',
-            finish: false
+            finish: false,
+            del: false
           },
           todosData: [],
           isEdit: false, // 是否編輯
@@ -151,6 +166,9 @@
             keyboard: false
           })
           modal.show();
+          setTimeout(() => {
+            this.$refs.todoText.focus()
+          }, 500);
         },
         // 關閉 modal
         closeModal(){
@@ -158,7 +176,8 @@
             id: '',
             content: '',
             completionDate: '',
-            finish: false
+            finish: false,
+            del: false
           }
           this.isEdit = false
           const modalId = document.getElementById('todoModal')
@@ -173,6 +192,8 @@
         },
         // 送出 Todo
         sendAddTodo(){
+          // 沒寫 todo & 日期就 return
+          if(this.todos.content === '' || this.todos.completionDate === '') return
           // 新增
           if(!this.isEdit) {
             this.todosData.push(this.todos)
@@ -214,16 +235,28 @@
         },
         // 刪除 Todo
         delTodo(data){
+          if (window.confirm('你確定要刪除 Todo ?')) {
             const delIndex1 = this.todosData.findIndex((item) => item.id  === data.id)
-            this.todosData.splice(delIndex1, 1)
-            localStorage.setItem('Todos', JSON.stringify(this.todosData));
+            this.todosData[delIndex1].del = true
+            setTimeout(() => {
+              this.todosData.splice(delIndex1, 1)
+              localStorage.setItem('Todos', JSON.stringify(this.todosData));
+            }, 500);
+          }
         },
         // 清除所有 Todo
         clearAll(){
-          this.todosData = []
-          this.isEdit = false
-          this.state = 0
-          localStorage.clear();
+          if (window.confirm('你確定要刪除全部的 Todo ?')) {
+            this.todosData.forEach(item => {
+              item.del = true
+            });
+            setTimeout(() => {
+              this.todosData = []
+              this.isEdit = false
+              this.state = 0
+              localStorage.clear();
+            }, 450);
+          }
         }
       },
     }).mount('#app')
