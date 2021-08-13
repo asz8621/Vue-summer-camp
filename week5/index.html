@@ -4,19 +4,22 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+  <title>Firebase + Vue 即時聊天室</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 </head>
 <body>
 <style>
+  body{
+    background-image: url('https://images.unsplash.com/photo-1490735891913-40897cdaafd1?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1050&q=80');
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-size: cover;
+  }
   .headshot{
-    display: flex;
-    justify-content: center;
-    align-items: center;
     width: 30px;
     height: 30px;
     border-radius: 50%;
-    background: pink;
+    background: rgb(192, 192, 192);
   }
   .chatContent{
     word-wrap:break-word;
@@ -36,90 +39,84 @@
   .other .name{
     color: #563566;
   }
-  .fwd{
-    height: calc(100vh - 116px);
+  .overflow-scroll-y{
     overflow-y: scroll;
   }
+  .chatHeight{
+    height: calc(100vh - 120px);
+  }
+  .login{
+    top: 68px;
+    max-width: 250px;
+  }
+  .loginSuccess, .loginBtn{
+    top: 28px;
+  }
 </style>
-
-<h1 class="text-center m-4">聊天室</h1>
 <div class="container">
+  <div class="position-relative">
+    <h1 class="text-center p-4">聊天室</h1>
+
+    <!-- 登入成功後 -->
+    <!-- <div class="loginSuccess position-absolute end-0">
+      <span class="loginUserNmae">大雞雞 你好!</span>
+      <a href="#">編輯</a>
+    </div> -->
+
+    <!-- 未登入 -->
+    <div class="loginBtn btn btn-primary position-absolute end-0">加入聊天室</div>
+
+    <!-- 登入視窗 -->
+    <!-- <div class="login position-absolute end-0 bg-white border p-3">
+      <div class="mb-3">
+        <label for="chatName" class="form-label">暱稱</label>
+        <input type="email" class="form-control" id="chatName" aria-describedby="chatName">
+      </div>
+      <button type="button" class="btn btn-primary w-100">進入聊天室</button>
+    </div> -->
+  
+  </div>
   <div class="row"> 
-    <div class="col-8">
+    <div class="col">
       <div class="chatBlock">
-        <ul class="fwd border list-unstyled p-4">
+        <ul class="chatHeight border list-unstyled p-4">
           <!-- 自己 -->
           <li class="text-end me">
             <div class="name d-flex justify-content-end align-items-center">
-              <small class="headshot me-1">N</small>
-              <h3 class="fs-5 m-0">Nielsen</h3>
+              <small class="headshot d-flex justify-content-center align-items-center me-1">N</small>
+              <h3 class="fs-5 my-3">Nielsen</h3>
             </div>
-            <p class="chatContent d-inline-block rounded fs-4 my-3 ms-auto py-2 px-3">我今天吃水餃</p>
+            <p class="chatContent d-inline-block rounded fs-4 ms-auto py-2 px-3">我今天吃水餃</p>
           </li>
           <!-- 別人 -->
           <li class="other">
             <div class="name d-flex align-items-center">
-              <small class="headshot me-1">O</small>
-              <h3 class="fs-5 m-0">other user1</h3>
+              <small class="headshot d-flex justify-content-center align-items-center me-1">O</small>
+              <h3 class="fs-5 my-3">other user1</h3>
             </div>
-            <p class="chatContent d-inline-block rounded fs-4 my-3 py-2 px-3">好吃嗎?</p>
-          </li>
-          <li class="other">
-            <div class="name d-flex align-items-center">
-              <small class="headshot me-1">O</small>
-              <h3 class="fs-5 m-0">other user2</h3>
-            </div>
-            <p class="chatContent d-inline-block rounded fs-4 my-3 py-2 px-3">這麼胖少吃一點</p>
-          </li>
-          <li class="other">
-            <div class="name d-flex align-items-center">
-              <small class="headshot me-1">O</small>
-              <h3 class="fs-5 m-0">other user3</h3>
-            </div>
-            <p class="chatContent d-inline-block rounded fs-4 my-3 py-2 px-3">好吃嗎?</p>
-          </li>
-          <li class="other">
-            <div class="name d-flex align-items-center">
-              <small class="headshot me-1">O</small>
-              <h3 class="fs-5 m-0">other user4</h3>
-            </div>
-            <p class="chatContent d-inline-block rounded fs-4 my-3 py-2 px-3">這麼胖少吃一點</p>
-          </li>
-          <li class="other">
-            <div class="name d-flex align-items-center">
-              <small class="headshot me-1">O</small>
-              <h3 class="fs-5 m-0">other user5</h3>
-            </div>
-            <p class="chatContent d-inline-block rounded fs-4 my-3 py-2 px-3">好吃嗎?</p>
-          </li>
-          <li class="other">
-            <div class="name d-flex align-items-center">
-              <small class="headshot me-1">O</small>
-              <h3 class="fs-5 m-0">other user6</h3>
-            </div>
-            <p class="chatContent d-inline-block rounded fs-4 my-3 py-2 px-3">這麼胖少吃一點</p>
-          </li>
-          <li class="other">
-            <div class="name d-flex align-items-center">
-              <small class="headshot me-1">O</small>
-              <h3 class="fs-5 m-0">other user7</h3>
-            </div>
-            <p class="chatContent d-inline-block rounded fs-4 my-3 py-2 px-3">這麼胖少吃一點</p>
+            <p class="chatContent d-inline-block rounded fs-4 py-2 px-3">好吃嗎?</p>
           </li>
         </ul>
-      </div>
-    </div>
-    <div class="col-4">
-      <div class="register d-flex justify-content-center align-items-center h-100">
-        <div class="register">
-          <h2 class="fs-3">註冊帳號</h2>
-          <input type="text" class="w-100">
-          <button type="button" class="btn btn-primary">登入</button>
-        </div>
       </div>
     </div>
   </div>
 </div>
 
+<script src="https://unpkg.com/vue@next"></script>
+<script>
+  Vue.createApp({
+    data(){
+      return {
+
+      }
+    },
+    mounted() {
+
+    },
+    methods: {
+
+    },
+  })
+</script>
 </body>
 </html>
