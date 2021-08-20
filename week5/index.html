@@ -104,7 +104,7 @@
     <div class="row"> 
       <div class="col">
         <div class="chatBlock position-relative">
-          <ul class="chatHeight border rounded list-unstyled overflow-scroll-y p-4">
+          <ul class="chatHeight border rounded list-unstyled overflow-scroll-y p-4 my-2 my-md-0">
             <li class="chatItem" v-for="item in chatLog" :key="item.key" :class="{'text-end me': item.name === loginUserName }">
               <div class="name d-flex align-items-center" :class="{ 'justify-content-end': item.name === loginUserName }">
                 <small class="headshot d-flex justify-content-center align-items-center me-1">{{ item.name.charAt(0) }}</small>
@@ -142,8 +142,8 @@
       projectId: "chatroom-adec9",
       storageBucket: "chatroom-adec9.appspot.com",
       messagingSenderId: "29873809816",
-      appId: "1:29873809816:web:41b0e6fabdea8ea493e3ed",
-      measurementId: "G-V6233KP12J"
+      appId: "1:29873809816:web:348dc0c35608a3c093e3ed",
+      measurementId: "G-8H59QM70VP"
     };
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
