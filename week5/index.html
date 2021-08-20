@@ -8,8 +8,10 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 </head>
 <body>
-<style>
-  body{
+  <style>
+    body{
+    height: 100vh;
+    width: 100%;
     background-image: url('https://images.unsplash.com/photo-1490735891913-40897cdaafd1?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1050&q=80');
     background-repeat: no-repeat;
     background-position: center center;
@@ -32,11 +34,11 @@
   .me .name{
     color: #1e35ac;
   }
-  .other .chatContent{
+  .chatContent{
     background: #abcc9f;
     color: #563566;
   }
-  .other .name{
+  .name{
     color: #563566;
   }
   .overflow-scroll-y{
@@ -44,79 +46,272 @@
   }
   .chatHeight{
     height: calc(100vh - 120px);
+    scrollbar-color: #c0c0c0 transparent;
   }
   .login{
     top: 68px;
     max-width: 250px;
+    z-index: 10;
+  }
+  .login.edit{
+    top: 95px;
   }
   .loginSuccess, .loginBtn{
     top: 28px;
   }
+  .chatHeight::-webkit-scrollbar {
+      width: 15px;
+      background: transparent;
+  }
+  .chatHeight::-webkit-scrollbar-thumb{
+    background: #c0c0c0;
+    border-radius: 10px;
+  }
+  .inputContent{
+    height: 45px;
+  }
 </style>
-<div class="container">
-  <div class="position-relative">
-    <h1 class="text-center p-4">聊天室</h1>
+<div id="app">
+  <div class="container">
+    <div class="position-relative">
+      <h1 class="text-center p-4">聊天室</h1>
 
-    <!-- 登入成功後 -->
-    <!-- <div class="loginSuccess position-absolute end-0">
-      <span class="loginUserNmae">大雞雞 你好!</span>
-      <a href="#">編輯</a>
-    </div> -->
-
-    <!-- 未登入 -->
-    <div class="loginBtn btn btn-primary position-absolute end-0">加入聊天室</div>
-
-    <!-- 登入視窗 -->
-    <!-- <div class="login position-absolute end-0 bg-white border p-3">
-      <div class="mb-3">
-        <label for="chatName" class="form-label">暱稱</label>
-        <input type="email" class="form-control" id="chatName" aria-describedby="chatName">
+      <!-- 登入成功後 -->
+      <div class="loginSuccess position-absolute end-0" v-if="isLogin">
+        <div class="loginUserNmae text-center mb-1">{{ loginUserName }} 你好!</div>
+        <div class="loginLink">
+          <button type="button" class="btn btn-primary mx-1" @click.prevent="openLogin('edit')" :disabled="isEdit">編輯</button>
+          <button type="button" class="btn btn-secondary mx-1" @click.prevent="logout" :disabled="isEdit">登出</button>
+        </div>
       </div>
-      <button type="button" class="btn btn-primary w-100">進入聊天室</button>
-    </div> -->
   
-  </div>
-  <div class="row"> 
-    <div class="col">
-      <div class="chatBlock">
-        <ul class="chatHeight border list-unstyled p-4">
-          <!-- 自己 -->
-          <li class="text-end me">
-            <div class="name d-flex justify-content-end align-items-center">
-              <small class="headshot d-flex justify-content-center align-items-center me-1">N</small>
-              <h3 class="fs-5 my-3">Nielsen</h3>
-            </div>
-            <p class="chatContent d-inline-block rounded fs-4 ms-auto py-2 px-3">我今天吃水餃</p>
-          </li>
-          <!-- 別人 -->
-          <li class="other">
-            <div class="name d-flex align-items-center">
-              <small class="headshot d-flex justify-content-center align-items-center me-1">O</small>
-              <h3 class="fs-5 my-3">other user1</h3>
-            </div>
-            <p class="chatContent d-inline-block rounded fs-4 py-2 px-3">好吃嗎?</p>
-          </li>
-        </ul>
+      <!-- 未登入 -->
+      <div class="loginBtn btn btn-primary position-absolute end-0" @click="openLogin" v-if="!isLogin">加入聊天室</div>
+  
+      <!-- 登入視窗 -->
+      <div class="login position-absolute end-0 bg-white border p-3" :class="{'edit': isEdit}" v-if="isOpenLogin">
+        <div class="mb-3">
+          <label for="chatName" class="form-label">暱稱</label>
+          <input type="text" class="form-control" id="chatName1" aria-describedby="chatName" v-model.trim="tempLoginUserName" ref="loginName" @keyup.enter="editName" v-if="isEdit">
+          <input type="text" class="form-control" id="chatName" aria-describedby="chatName" v-model.trim="tempLoginUserName" ref="loginName" @keyup.enter="login" v-else>
+        </div>
+        <button type="button" class="btn btn-primary w-100" @click="editName" v-if="isEdit">確認暱稱</button>
+        <button type="button" class="btn btn-primary w-100" @click="login" v-else>進入聊天室</button>
+      </div>
+    
+    </div>
+    
+    <div class="row"> 
+      <div class="col">
+        <div class="chatBlock position-relative">
+          <ul class="chatHeight border rounded list-unstyled overflow-scroll-y p-4">
+            <li class="chatItem" v-for="item in chatLog" :key="item.key" :class="{'text-end me': item.name === loginUserName }">
+              <div class="name d-flex align-items-center" :class="{ 'justify-content-end': item.name === loginUserName }">
+                <small class="headshot d-flex justify-content-center align-items-center me-1">{{ item.name.charAt(0) }}</small>
+                <h3 class="fs-5 my-3">{{ item.name }}</h3>
+              </div>
+              <p class="chatContent d-inline-block rounded fs-4 py-2 px-3" :class="{ 'ms-auto': item.name === loginUserName }">{{ item.content }}</p>
+            </li>
+          </ul>
+          <div class="inputContent input-group position-absolute bottom-0 start-0 py-3" v-if="isLogin">
+            <input type="text" class="form-control" v-model.trim="content" @keyup.enter="sendMessage" ref="chatContent" :disabled="isEdit">
+            <button class="btn btn-secondary" type="button" id="button-addon2" @click.prevent ="sendMessage">←</button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<script src="https://unpkg.com/vue@next"></script>
+  <script src="https://unpkg.com/vue@next"></script>
+
+  <!-- The core Firebase JS SDK is always required and must be listed first -->
+  <script src="https://www.gstatic.com/firebasejs/8.9.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.9.1/firebase-database.js"></script>
+
+  <!-- TODO: Add SDKs for Firebase products that you want to use
+      https://firebase.google.com/docs/web/setup#available-libraries -->
+  <script src="https://www.gstatic.com/firebasejs/8.9.1/firebase-analytics.js"></script>
+
 <script>
+    // Your web app's Firebase configuration
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+    var firebaseConfig = {
+      apiKey: "AIzaSyBsWzNxwBXCLMtQQmKvqcIUm32N7fVE3pA",
+      authDomain: "chatroom-adec9.firebaseapp.com",
+      projectId: "chatroom-adec9",
+      storageBucket: "chatroom-adec9.appspot.com",
+      messagingSenderId: "29873809816",
+      appId: "1:29873809816:web:41b0e6fabdea8ea493e3ed",
+      measurementId: "G-V6233KP12J"
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    firebase.analytics();
+
+    // 建立連線
+    const db = firebase.database().ref('chatroom');
+  
   Vue.createApp({
     data(){
       return {
-
+        isOpenLogin: false,
+        loginUserName: '', // 登入的使用者名稱
+        tempLoginUserName: '', // 暫存登入的使用者名稱
+        content: '', // 輸入的聊天內容
+        chatLog: [], // 從資料庫撈資料用
+        isLogin: false, // 是否登入
+        isEdit: false, // 是否為編輯狀態
       }
     },
-    mounted() {
+    watch:{
+      chatLog:{
+        handler(newValue, olValue){
+          if(newValue !== olValue) this.getChat()
+        }
+      }
+    },
+    computed:{
 
+    },
+    mounted() {
+      this.getChat()
     },
     methods: {
+      getChat() {
+        db.on('value', (snapshot) => {
+          this.chatLog = snapshot.val();
+        });
 
+        // 將畫面移至最新的聊天紀錄
+        let chatHeight = document.querySelector('.chatHeight');
+        const monitorScroll =  setInterval(() => {
+          if(chatHeight.scrollHeight > chatHeight.clientHeight){
+            this.scrollBottom();
+            clearInterval(monitorScroll);
+          }
+        }, 100);
+      },
+      // 登入視窗
+      openLogin(state) { 
+        if(state === 'edit') {
+          this.isEdit = true
+          this.tempLoginUserName = this.loginUserName
+        } else {
+          this.tempLoginUserName = ''
+        }
+        // 打開登入視窗
+        this.isOpenLogin = !this.isOpenLogin
+        // input focus
+        if(this.isOpenLogin) {
+          this.$nextTick(() => {
+            this.$refs.loginName.focus()
+          });
+        }
+      },
+      // 登入
+      login() {
+        if(!this.tempLoginUserName) return
+        this.loginUserName = this.tempLoginUserName;
+        this.isLogin = true;
+        this.isOpenLogin = false;
+        this.tempLoginUserName = '';
+        this.scrollBottom();
+        // input focus
+        this.$nextTick(() => {
+          this.$refs.chatContent.focus()
+        });
+      },
+      // 訊息送出
+      sendMessage() {
+        // 空白不執行
+        if(!this.content) return
+        // 資料送到 Firebase
+        const key = db.push().key;
+        db.child(key).set({
+          key,
+          name: this.loginUserName,
+          content: this.content,
+          time: new Date().getTime(),
+        })
+        .then(() => {
+          this.scrollBottom();
+          this.content = '';
+        })
+      },
+      // scroll 到最下面
+      scrollBottom() {
+        let chatHeight = document.querySelector('.chatHeight');
+        chatHeight.scrollTop = chatHeight.scrollHeight;
+      },
+      // 編輯暱稱
+      editName() {
+        let datas = {}
+        if(this.loginUserName === this.tempLoginUserName) {
+          this.tempLoginUserName = ''
+          this.isOpenLogin = false
+          this.isEdit = false
+          return
+        }
+        db.get().then((snapshot) => {
+          if (snapshot.exists()) {
+            datas = snapshot.val()
+            // 要修改的暱稱如果資料庫有重複就不執行修改暱稱
+            const isRepeat = Object.keys(datas).some(item =>{
+              return datas[item].name === this.tempLoginUserName
+            })
+            if(isRepeat) {
+              alert('此暱稱已經有人使用')
+              return
+            }
+
+            // 沒有聊天紀錄要修改暱稱
+            const firstChangeName = Object.keys(datas).some(item =>{
+              return datas[item].name === this.loginUserName
+            })
+            if(!firstChangeName) {
+              this.loginUserName = this.tempLoginUserName
+              this.content = ''; // 輸入的聊天內容
+              this.isOpenLogin = false;
+              this.isEdit = false; // 是否為編輯狀態
+              this.tempLoginUserName = ''
+              alert('暱稱修改成功')
+              return
+            } else {
+            // 有聊天紀錄要修改暱稱
+              const wwwad = Object.keys(datas).forEach(key => {
+                if(this.loginUserName === datas[key].name) {
+                  db.child(key).update({
+                    name: this.tempLoginUserName,
+                  })
+                }
+              });
+              this.loginUserName = this.tempLoginUserName
+              this.content = ''; // 輸入的聊天內容
+              this.isOpenLogin = false;
+              this.isEdit = false; // 是否為編輯狀態
+              this.tempLoginUserName = ''
+              alert('暱稱修改成功')
+            }
+
+
+          } else {
+            alert("資料異常請聯絡管理人");
+          }
+        }).catch((error) => {
+          console.error(error);
+        });
+      },
+      logout() {
+        this.loginUserName = ''; // 登入的使用者名稱
+        this.tempLoginUserName = ''; // 暫存登入的使用者名稱
+        this.content = ''; // 輸入的聊天內容
+        this.isOpenLogin = false;
+        this.isLogin = false; // 是否登入
+        this.isEdit = false; // 是否為編輯狀態
+      }
     },
-  })
+  }).mount('#app')
 </script>
 </body>
 </html>
